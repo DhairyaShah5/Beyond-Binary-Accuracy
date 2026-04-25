@@ -47,6 +47,7 @@ Even BERT, at 94% overall accuracy, drops 6 percentage points on mixed-sentiment
 │   ├── 02_cnn.py                        # CNN (Kim 2014) standalone script
 │   ├── 03_bert.py                       # BERT fine-tuning standalone script
 │   ├── 04_colab_train_cnn_bert.ipynb    # Colab notebook for CNN + BERT (GPU required)
+│   ├── 05_trained_notebook.ipynb        # Pre-run notebook with all outputs and results
 │   ├── 01_baselines_results.csv         # Baseline results on IMDb
 │   ├── 01_baselines_sst2_results.csv    # Baseline results on SST-2
 │   ├── 02_cnn_results.csv               # CNN results on IMDb
@@ -110,6 +111,8 @@ Trains Naive Bayes, Linear SVM, and Hybrid SVM on IMDb using TF-IDF features. Ev
 **Option A - Google Colab (recommended):**
 
 Open `code/04_colab_train_cnn_bert.ipynb` in Google Colab, set runtime to GPU (T4 or A100), and run all cells. The notebook is self-contained - it downloads all data, trains both models, and lets you download the result CSVs at the end.
+
+If you just want to see the outputs without re-running, `code/05_trained_notebook.ipynb` contains the pre-run notebook with all training logs, metrics, and results already populated.
 
 **Option B - Local GPU:**
 
