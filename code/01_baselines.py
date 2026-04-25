@@ -432,3 +432,77 @@ with open(OUT_HTML, "w", encoding="utf-8") as f:
 
 print(f"\nHTML report written to: {OUT_HTML}")
 print(f"CSV results written to: {OUT_CSV}")
+
+# ------------------------------------------------------------------ #
+# 11. SST-2 SECONDARY BENCHMARK
+# ------------------------------------------------------------------ #
+print("\n" + "="*60)
+print("SST-2 SECONDARY BENCHMARK")
+print("="*60)
+
+import sys
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from utils_data import load_sst2
+
+X_train_sst, y_train_sst, X_test_sst, y_test_sst = load_sst2()
+
+# Preprocess SST-2
+X_train_sst_clean = [clean(t) for t in X_train_sst]
+X_test_sst_clean  = [clean(t) for t in X_test_sst]
+
+# TF-IDF (fit on SST-2 train, since vocab differs from IMDb)
+print("Building SST-2 TF-IDF features ...")
+vec_sst = TfidfVectorizer(
+    ngram_range=(1, 2), max_features=50_000,
+    min_df=2, sublinear_tf=True, stop_words="english",
+)
+X_train_sst_tfidf = vec_sst.fit_transform(X_train_sst_clean)
+X_test_sst_tfidf  = vec_sst.transform(X_test_sst_clean)
+
+# Hand features for hybrid
+X_train_sst_hand = np.array([hand_features(t) for t in X_train_sst_clean], dtype=np.float32)
+X_test_sst_hand  = np.array([hand_features(t) for t in X_test_sst_clean],  dtype=np.float32)
+X_train_sst_hybrid = hstack([X_train_sst_tfidf, csr_matrix(X_train_sst_hand)]).tocsr()
+X_test_sst_hybrid  = hstack([X_test_sst_tfidf,  csr_matrix(X_test_sst_hand)]).tocsr()
+
+# Train models on SST-2
+print("Training baselines on SST-2 ...")
+nb_sst = MultinomialNB()
+nb_sst.fit(X_train_sst_tfidf, y_train_sst)
+
+svm_sst = LinearSVC(C=1.0)
+svm_sst.fit(X_train_sst_tfidf, y_train_sst)
+
+svm_h_sst = LinearSVC(C=1.0)
+svm_h_sst.fit(X_train_sst_hybrid, y_train_sst)
+
+# Evaluate on SST-2 test
+y_sst_np = np.asarray(y_test_sst)
+sst_models = {
+    "Naive Bayes (TF-IDF)": nb_sst.predict(X_test_sst_tfidf),
+    "Linear SVM (TF-IDF)": svm_sst.predict(X_test_sst_tfidf),
+    "Hybrid SVM (TF-IDF + lexicon)": svm_h_sst.predict(X_test_sst_hybrid),
+}
+
+sst_results = []
+for model_name, preds in sst_models.items():
+    sst_results.append({
+        "dataset": "SST-2",
+        "model": model_name,
+        "n": len(y_sst_np),
+        "acc": accuracy_score(y_sst_np, preds),
+        "prec": precision_score(y_sst_np, preds, zero_division=0),
+        "rec": recall_score(y_sst_np, preds, zero_division=0),
+        "f1": f1_score(y_sst_np, preds, zero_division=0),
+    })
+
+sst_df = pd.DataFrame(sst_results)
+print("\n=== SST-2 RESULTS ===")
+print(sst_df.to_string(index=False,
+      formatters={"acc":"{:.4f}".format, "prec":"{:.4f}".format,
+                  "rec":"{:.4f}".format, "f1":"{:.4f}".format}))
+
+# Save SST-2 results
+OUT_SST_CSV = os.path.join(os.path.dirname(__file__), "01_baselines_sst2_results.csv")
+sst_df.to_csv(OUT_SST_CSV, index=False)
+print(f"\nSST-2 results saved to: {OUT_SST_CSV}")

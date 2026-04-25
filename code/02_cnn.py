@@ -317,3 +317,112 @@ df = print_results(results, model_name="CNN (GloVe + Kim2014)")
 # Save CSV
 df.to_csv(OUT_CSV, index=False)
 print(f"\nResults saved to: {OUT_CSV}")
+
+# ------------------------------------------------------------------ #
+# 8. SST-2 SECONDARY BENCHMARK
+# ------------------------------------------------------------------ #
+print("\n" + "="*60)
+print("SST-2 SECONDARY BENCHMARK")
+print("="*60)
+
+from utils_data import load_sst2
+
+X_train_sst, y_train_sst, X_test_sst, y_test_sst = load_sst2()
+X_train_sst_clean = [clean(t) for t in X_train_sst]
+X_test_sst_clean  = [clean(t) for t in X_test_sst]
+
+# Build vocab from SST-2 training data (reuse IMDb vocab for embeddings)
+# SST-2 sentences are short, so we use a shorter max_len
+SST_MAX_LEN = 64
+
+sst_train_ds = IMDbDataset(X_train_sst_clean, y_train_sst, SST_MAX_LEN)
+sst_test_ds  = IMDbDataset(X_test_sst_clean, y_test_sst, SST_MAX_LEN)
+sst_train_loader = DataLoader(sst_train_ds, batch_size=args.batch_size, shuffle=True)
+sst_test_loader  = DataLoader(sst_test_ds, batch_size=args.batch_size, shuffle=False)
+
+# Train a fresh CNN on SST-2
+print("Training CNN on SST-2 ...")
+sst_model = TextCNN(
+    vocab_size=VOCAB_SIZE,
+    embed_dim=args.embed_dim,
+    num_filters=args.num_filters,
+    filter_sizes=args.filter_sizes,
+    dropout=args.dropout,
+    pretrained_embeddings=embedding_matrix,
+).to(DEVICE)
+
+sst_optimizer = torch.optim.Adam(sst_model.parameters(), lr=args.lr)
+
+for epoch in range(1, args.epochs + 1):
+    sst_model.train()
+    total_loss = 0
+    correct = 0
+    total = 0
+    t0 = time.time()
+
+    for batch_x, batch_y in sst_train_loader:
+        batch_x, batch_y = batch_x.to(DEVICE), batch_y.to(DEVICE)
+        sst_optimizer.zero_grad()
+        logits = sst_model(batch_x)
+        loss = criterion(logits, batch_y)
+        loss.backward()
+        sst_optimizer.step()
+
+        total_loss += loss.item() * batch_x.size(0)
+        preds = (logits > 0).long()
+        correct += (preds == batch_y.long()).sum().item()
+        total += batch_x.size(0)
+
+    train_acc = correct / total
+
+    sst_model.eval()
+    val_correct = 0
+    val_total = 0
+    with torch.no_grad():
+        for batch_x, batch_y in sst_test_loader:
+            batch_x, batch_y = batch_x.to(DEVICE), batch_y.to(DEVICE)
+            logits = sst_model(batch_x)
+            preds = (logits > 0).long()
+            val_correct += (preds == batch_y.long()).sum().item()
+            val_total += batch_x.size(0)
+    val_acc = val_correct / val_total
+
+    print(f"  Epoch {epoch}/{args.epochs}  "
+          f"loss={total_loss/total:.4f}  train_acc={train_acc:.4f}  "
+          f"val_acc={val_acc:.4f}  ({time.time()-t0:.1f}s)")
+
+# Final SST-2 evaluation
+sst_model.eval()
+sst_preds = []
+with torch.no_grad():
+    for batch_x, batch_y in sst_test_loader:
+        batch_x = batch_x.to(DEVICE)
+        logits = sst_model(batch_x)
+        preds = (logits > 0).long()
+        sst_preds.extend(preds.cpu().numpy())
+
+from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
+
+y_sst_pred = np.array(sst_preds)
+y_sst_true = np.array(y_test_sst)
+
+sst_results = [{
+    "dataset": "SST-2",
+    "model": "CNN (GloVe + Kim2014)",
+    "n": len(y_sst_true),
+    "acc": accuracy_score(y_sst_true, y_sst_pred),
+    "prec": precision_score(y_sst_true, y_sst_pred, zero_division=0),
+    "rec": recall_score(y_sst_true, y_sst_pred, zero_division=0),
+    "f1": f1_score(y_sst_true, y_sst_pred, zero_division=0),
+}]
+
+import pandas as pd
+sst_df = pd.DataFrame(sst_results)
+print("\n=== CNN SST-2 RESULTS ===")
+print(sst_df.to_string(index=False,
+      formatters={"acc":"{:.4f}".format, "prec":"{:.4f}".format,
+                  "rec":"{:.4f}".format, "f1":"{:.4f}".format}))
+
+OUT_SST_CSV = os.path.join(os.path.dirname(__file__), "02_cnn_sst2_results.csv")
+sst_df.to_csv(OUT_SST_CSV, index=False)
+print(f"\nSST-2 results saved to: {OUT_SST_CSV}")

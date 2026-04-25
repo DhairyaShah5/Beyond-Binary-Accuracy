@@ -69,6 +69,35 @@ def load_imdb():
     X_test, y_test = load_split("test")
     return X_train, y_train, X_test, y_test
 
+
+def load_sst2():
+    """Load SST-2 (Stanford Sentiment Treebank, binary split) via HuggingFace.
+
+    SST-2 provides shorter sentence-level sentiment annotations, serving as
+    a secondary benchmark to contrast with IMDb's document-level reviews.
+
+    Returns:
+        (X_train_text, y_train, X_test_text, y_test)
+
+    Note:
+        The official SST-2 test set has hidden labels, so we use the
+        validation split as our test set (standard practice).
+    """
+    from datasets import load_dataset
+
+    print("Loading SST-2 from HuggingFace ...")
+    ds = load_dataset("glue", "sst2")
+
+    X_train = [ex["sentence"] for ex in ds["train"]]
+    y_train = [ex["label"] for ex in ds["train"]]
+
+    # Use validation split as test (official test labels are hidden)
+    X_test = [ex["sentence"] for ex in ds["validation"]]
+    y_test = [ex["label"] for ex in ds["validation"]]
+
+    print(f"  SST-2 train: {len(X_train)}  test(val): {len(X_test)}")
+    return X_train, y_train, X_test, y_test
+
 # ------------------------------------------------------------------ #
 # Preprocessing
 # ------------------------------------------------------------------ #

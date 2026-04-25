@@ -10,3 +10,6 @@ torchvision
 
 # BERT (03_bert.py)
 transformers
+
+# SST-2 dataset
+datasets
