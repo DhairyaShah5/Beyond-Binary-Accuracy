@@ -1,0 +1,12 @@
+# Shared
+numpy
+pandas
+scikit-learn
+scipy
+
+# CNN (02_cnn.py)
+torch
+torchvision
+
+# BERT (03_bert.py)
+transformers

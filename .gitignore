@@ -1,0 +1,29 @@
+# Data files (too large for GitHub)
+data/aclImdb_v1.tar.gz
+data/aclImdb/
+data/glove/
+
+# Reports (not part of code submission)
+reports/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.ipynb_checkpoints/
+*.egg-info/
+dist/
+build/
+
+# Virtual environments
+venv/
+env/
+.env/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/

@@ -1,0 +1,41 @@
+Loading IMDb data ...
+  train: 25000  test: 25000  (5.6s)
+Cleaning text ...
+Building TF-IDF features ...
+  tfidf shape: (25000, 50000)
+Building hand-crafted features ...
+Training Naive Bayes ...
+Training Linear SVM ...
+Training Hybrid SVM ...
+Building challenging slices ...
+Evaluating ...
+
+=== RESULTS ===
+                                slice                         model     n    acc   prec    rec     f1
+                        Full test set          Naive Bayes (TF-IDF) 25000 0.8573 0.8742 0.8347 0.8540
+                        Full test set           Linear SVM (TF-IDF) 25000 0.8810 0.8870 0.8733 0.8801
+                        Full test set Hybrid SVM (TF-IDF + lexicon) 25000 0.8829 0.8894 0.8745 0.8819
+  Long reviews (>=300 words) [n=5588]          Naive Bayes (TF-IDF)  5588 0.8482 0.8479 0.8485 0.8482
+  Long reviews (>=300 words) [n=5588]           Linear SVM (TF-IDF)  5588 0.8787 0.8924 0.8611 0.8765
+  Long reviews (>=300 words) [n=5588] Hybrid SVM (TF-IDF + lexicon)  5588 0.8778 0.8922 0.8593 0.8754
+   Negation-heavy (>=3 cues) [n=9197]          Naive Bayes (TF-IDF)  9197 0.8533 0.8308 0.8100 0.8203
+   Negation-heavy (>=3 cues) [n=9197]           Linear SVM (TF-IDF)  9197 0.8764 0.8533 0.8464 0.8498
+   Negation-heavy (>=3 cues) [n=9197] Hybrid SVM (TF-IDF + lexicon)  9197 0.8760 0.8605 0.8356 0.8478
+Mixed sentiment (pos&neg>=2) [n=4737]          Naive Bayes (TF-IDF)  4737 0.8632 0.7556 0.6601 0.7046
+Mixed sentiment (pos&neg>=2) [n=4737]           Linear SVM (TF-IDF)  4737 0.8885 0.7947 0.7404 0.7666
+Mixed sentiment (pos&neg>=2) [n=4737] Hybrid SVM (TF-IDF + lexicon)  4737 0.8896 0.8006 0.7370 0.7675
+
+=== DROP ON HARD SLICES (percentage points) ===
+                                slice                         model full_acc slice_acc acc_drop full_f1 slice_f1 f1_drop
+  Long reviews (>=300 words) [n=5588]          Naive Bayes (TF-IDF)   0.8573    0.8482    +0.90  0.8540   0.8482   +0.57
+  Long reviews (>=300 words) [n=5588]           Linear SVM (TF-IDF)   0.8810    0.8787    +0.23  0.8801   0.8765   +0.36
+  Long reviews (>=300 words) [n=5588] Hybrid SVM (TF-IDF + lexicon)   0.8829    0.8778    +0.51  0.8819   0.8754   +0.65
+   Negation-heavy (>=3 cues) [n=9197]          Naive Bayes (TF-IDF)   0.8573    0.8533    +0.40  0.8540   0.8203   +3.37
+   Negation-heavy (>=3 cues) [n=9197]           Linear SVM (TF-IDF)   0.8810    0.8764    +0.46  0.8801   0.8498   +3.03
+   Negation-heavy (>=3 cues) [n=9197] Hybrid SVM (TF-IDF + lexicon)   0.8829    0.8760    +0.68  0.8819   0.8478   +3.41
+Mixed sentiment (pos&neg>=2) [n=4737]          Naive Bayes (TF-IDF)   0.8573    0.8632    -0.59  0.8540   0.7046  +14.93
+Mixed sentiment (pos&neg>=2) [n=4737]           Linear SVM (TF-IDF)   0.8810    0.8885    -0.75  0.8801   0.7666  +11.35
+Mixed sentiment (pos&neg>=2) [n=4737] Hybrid SVM (TF-IDF + lexicon)   0.8829    0.8896    -0.67  0.8819   0.7675  +11.44
+
+HTML report written to: results_report.html
+CSV results written to: results.csv

@@ -1,0 +1,83 @@
+<!doctype html>
+<html><head><meta charset='utf-8'>
+<title>Beyond Binary Accuracy — IMDb Sentiment Results</title>
+<style>
+ body { font-family: -apple-system, Helvetica, Arial, sans-serif;
+        max-width: 1000px; margin: 40px auto; color:#222; padding:0 20px; }
+ h1 { margin-bottom: 4px; }
+ h2 { border-bottom:2px solid #e0e0e0; padding-bottom:4px; margin-top:32px;}
+ table { border-collapse: collapse; width:100%; margin:10px 0 24px;}
+ th, td { border:1px solid #d0d0d0; padding:6px 10px; text-align:left;
+          font-size: 14px; }
+ th { background:#f4f4f7; }
+ td.num { text-align:right; font-variant-numeric: tabular-nums; }
+ tr.slice-header td { background:#eef; font-weight:600; }
+ .drop-bad { color:#c0392b; font-weight:600; }
+ .drop-good{ color:#1e8449; font-weight:600; }
+ .kv { background:#fafafa; padding:12px 16px; border-left:4px solid #5b8def;
+        border-radius:4px; margin:16px 0; }
+ code { background:#f4f4f7; padding:1px 4px; border-radius:3px; }
+</style></head><body>
+
+<h1>Beyond Binary Accuracy</h1>
+<p><i>Sentiment analysis on IMDb — comparing models on the full test set
+and on challenging slices (long, negation-heavy, mixed sentiment).</i></p>
+
+<div class='kv'>
+<b>Dataset:</b> IMDb (25,000 train / 25,000 test, balanced)<br>
+<b>Features:</b> TF-IDF (uni+bi-grams, 50k vocab) + hand-crafted lexicon / negation features<br>
+<b>Models:</b> Naive Bayes, Linear SVM, Hybrid SVM<br>
+Best overall model: <b>Hybrid SVM (TF-IDF + lexicon)</b> with 88.29% accuracy on the full IMDb test set.
+</div>
+
+<h2>1. Results — All models × All slices</h2>
+<table>
+ <thead><tr><th></th><th>Model</th><th>n</th><th>Accuracy</th><th>Precision</th><th>Recall</th><th>F1</th></tr></thead>
+ <tbody><tr class='slice-header'><td colspan='6'>Full test set</td></tr><tr><td></td><td>Naive Bayes (TF-IDF)</td><td>25000</td><td class='num'>85.73%</td><td class='num'>87.42%</td><td class='num'>83.47%</td><td class='num'>85.40%</td></tr><tr><td></td><td>Linear SVM (TF-IDF)</td><td>25000</td><td class='num'>88.10%</td><td class='num'>88.70%</td><td class='num'>87.33%</td><td class='num'>88.01%</td></tr><tr><td></td><td>Hybrid SVM (TF-IDF + lexicon)</td><td>25000</td><td class='num'>88.29%</td><td class='num'>88.94%</td><td class='num'>87.45%</td><td class='num'>88.19%</td></tr><tr class='slice-header'><td colspan='6'>Long reviews (&gt;=300 words) [n=5588]</td></tr><tr><td></td><td>Naive Bayes (TF-IDF)</td><td>5588</td><td class='num'>84.82%</td><td class='num'>84.79%</td><td class='num'>84.85%</td><td class='num'>84.82%</td></tr><tr><td></td><td>Linear SVM (TF-IDF)</td><td>5588</td><td class='num'>87.87%</td><td class='num'>89.24%</td><td class='num'>86.11%</td><td class='num'>87.65%</td></tr><tr><td></td><td>Hybrid SVM (TF-IDF + lexicon)</td><td>5588</td><td class='num'>87.78%</td><td class='num'>89.22%</td><td class='num'>85.93%</td><td class='num'>87.54%</td></tr><tr class='slice-header'><td colspan='6'>Negation-heavy (&gt;=3 cues) [n=9197]</td></tr><tr><td></td><td>Naive Bayes (TF-IDF)</td><td>9197</td><td class='num'>85.33%</td><td class='num'>83.08%</td><td class='num'>81.00%</td><td class='num'>82.03%</td></tr><tr><td></td><td>Linear SVM (TF-IDF)</td><td>9197</td><td class='num'>87.64%</td><td class='num'>85.33%</td><td class='num'>84.64%</td><td class='num'>84.98%</td></tr><tr><td></td><td>Hybrid SVM (TF-IDF + lexicon)</td><td>9197</td><td class='num'>87.60%</td><td class='num'>86.05%</td><td class='num'>83.56%</td><td class='num'>84.78%</td></tr><tr class='slice-header'><td colspan='6'>Mixed sentiment (pos&amp;neg&gt;=2) [n=4737]</td></tr><tr><td></td><td>Naive Bayes (TF-IDF)</td><td>4737</td><td class='num'>86.32%</td><td class='num'>75.56%</td><td class='num'>66.01%</td><td class='num'>70.46%</td></tr><tr><td></td><td>Linear SVM (TF-IDF)</td><td>4737</td><td class='num'>88.85%</td><td class='num'>79.47%</td><td class='num'>74.04%</td><td class='num'>76.66%</td></tr><tr><td></td><td>Hybrid SVM (TF-IDF + lexicon)</td><td>4737</td><td class='num'>88.96%</td><td class='num'>80.06%</td><td class='num'>73.70%</td><td class='num'>76.75%</td></tr></tbody>
+</table>
+
+<h2>2. Accuracy vs. F1 on challenging slices — the headline finding</h2>
+<p>This is the key evidence for the project's thesis. On hard slices,
+<b>accuracy looks fine (drops only ~0.5 pp, sometimes even rises)</b> —
+but <b>F1 drops sharply on the mixed-sentiment slice (≈10–11 pp)</b>.
+This is exactly the "accuracy is misleading" phenomenon: the overall
+number stays high because most hard reviews happen to be predicted
+positive, but the model's ability to correctly recall positives vs.
+negatives collapses.</p>
+<table>
+ <thead><tr><th>Model</th><th>Slice</th>
+ <th>Full Acc</th><th>Slice Acc</th><th>ΔAcc</th>
+ <th>Full F1</th><th>Slice F1</th><th>ΔF1</th></tr></thead>
+ <tbody><tr><td>Naive Bayes (TF-IDF)</td><td>Long reviews (&gt;=300 words) [n=5588]</td><td class='num'>85.73%</td><td class='num'>84.82%</td><td class='num drop-bad'>+0.90 pp</td><td class='num'>85.40%</td><td class='num'>84.82%</td><td class='num drop-bad'>+0.57 pp</td></tr><tr><td>Linear SVM (TF-IDF)</td><td>Long reviews (&gt;=300 words) [n=5588]</td><td class='num'>88.10%</td><td class='num'>87.87%</td><td class='num drop-bad'>+0.23 pp</td><td class='num'>88.01%</td><td class='num'>87.65%</td><td class='num drop-bad'>+0.36 pp</td></tr><tr><td>Hybrid SVM (TF-IDF + lexicon)</td><td>Long reviews (&gt;=300 words) [n=5588]</td><td class='num'>88.29%</td><td class='num'>87.78%</td><td class='num drop-bad'>+0.51 pp</td><td class='num'>88.19%</td><td class='num'>87.54%</td><td class='num drop-bad'>+0.65 pp</td></tr><tr><td>Naive Bayes (TF-IDF)</td><td>Negation-heavy (&gt;=3 cues) [n=9197]</td><td class='num'>85.73%</td><td class='num'>85.33%</td><td class='num drop-bad'>+0.40 pp</td><td class='num'>85.40%</td><td class='num'>82.03%</td><td class='num drop-bad'>+3.37 pp</td></tr><tr><td>Linear SVM (TF-IDF)</td><td>Negation-heavy (&gt;=3 cues) [n=9197]</td><td class='num'>88.10%</td><td class='num'>87.64%</td><td class='num drop-bad'>+0.46 pp</td><td class='num'>88.01%</td><td class='num'>84.98%</td><td class='num drop-bad'>+3.03 pp</td></tr><tr><td>Hybrid SVM (TF-IDF + lexicon)</td><td>Negation-heavy (&gt;=3 cues) [n=9197]</td><td class='num'>88.29%</td><td class='num'>87.60%</td><td class='num drop-bad'>+0.68 pp</td><td class='num'>88.19%</td><td class='num'>84.78%</td><td class='num drop-bad'>+3.41 pp</td></tr><tr><td>Naive Bayes (TF-IDF)</td><td>Mixed sentiment (pos&amp;neg&gt;=2) [n=4737]</td><td class='num'>85.73%</td><td class='num'>86.32%</td><td class='num drop-good'>-0.59 pp</td><td class='num'>85.40%</td><td class='num'>70.46%</td><td class='num drop-bad'>+14.93 pp</td></tr><tr><td>Linear SVM (TF-IDF)</td><td>Mixed sentiment (pos&amp;neg&gt;=2) [n=4737]</td><td class='num'>88.10%</td><td class='num'>88.85%</td><td class='num drop-good'>-0.75 pp</td><td class='num'>88.01%</td><td class='num'>76.66%</td><td class='num drop-bad'>+11.35 pp</td></tr><tr><td>Hybrid SVM (TF-IDF + lexicon)</td><td>Mixed sentiment (pos&amp;neg&gt;=2) [n=4737]</td><td class='num'>88.29%</td><td class='num'>88.96%</td><td class='num drop-good'>-0.67 pp</td><td class='num'>88.19%</td><td class='num'>76.75%</td><td class='num drop-bad'>+11.44 pp</td></tr></tbody>
+</table>
+
+<h2>3. Example misclassifications on mixed-sentiment reviews</h2>
+<p>Best model (Hybrid SVM (TF-IDF + lexicon)) on the mixed-sentiment slice:</p>
+<table>
+ <thead><tr><th>True</th><th>Predicted</th><th>Review snippet</th></tr></thead>
+ <tbody><tr><td>positive</td><td>negative</td><td>I went into this film thinking I wasn&#x27;t going to like it, but hoping to be surprised, but this, much like the film, ended up being bleak and hopeless. But don&#x27;t get me wrong, Minghella delivers every bit of a grand epic and for those who enjoy that kind of experience and are willing to take that adventure and accept what comes as just that, then they will not be disappointed and it will be one of ...</td></tr><tr><td>positive</td><td>negative</td><td>When we are young, we all pick out an ideal occupation for ourselves: artist, actor, writer, rocket scientist, etc.. While most of us grow out of our pipe dreams, the main character of American Movie, Mark, has yet to let go of his(and at a thirty-something age too): to become a wealthy acclaimed director. Despite the fact that Murphy&#x27;s Law won&#x27;t leave Mark alone and something always seems to go w...</td></tr><tr><td>positive</td><td>negative</td><td>I honestly have to say that A CAT IN THE BRAIN is one of the most fun and unintentionally hilarious films I&#x27;ve ever seen. This film is packed with stupid dialog, ridiculous scenes, and a self-involving plot, starring legendary horror director Lucio Fulci himself.  The threadbare story-line is about an aging director (Fulci, who is also named Lucio Fulci in the film...)who is starting to ...</td></tr><tr><td>positive</td><td>negative</td><td>22. JOE (drama, 1970) Joe (Peter Boyle) is a racist factory worker who&#x27;s known to hate &quot;hippies and ni**ers&quot;. He meets Bill, a businessman who has just murdered the lover of his drug addict young daughter Jill (Susan Sarandon). Jill runs away and joins a hippie commune at the outskirts of town. Bill turns to Joe for help. Their search leads them through the seediest parts of town where both men&#x27;s ...</td></tr><tr><td>positive</td><td>negative</td><td>i was having a horrid day but this movie grabbed me, and i couldn&#x27;t put it down until the end... and i had forgotten about my horrid day. and the ending... by the way... where is the sequel!!!  the budget is obviously extremely low... but ... look what they did with it! it reminds me of a play... they are basically working with a tent, a &#x27;escape pod&#x27;, a few guns, uniforms, camping gear, ...</td></tr></tbody>
+</table>
+
+<h2>4. Takeaways for the presentation</h2>
+<ul>
+ <li>Best baseline achieves <b>88.29%</b> accuracy
+     on the full IMDb test set.</li>
+ <li><b>Accuracy alone is misleading.</b> On the mixed-sentiment slice,
+     accuracy stays around 88-89% — but <b>F1 drops by ≈10-11 percentage
+     points</b>, from ~88.19% down to
+     ~76.75%.</li>
+ <li>On negation-heavy reviews, F1 drops ~3-4 pp — models literally get
+     tripped up by phrases like "not bad".</li>
+ <li>Hybrid features (TF-IDF + lexicon + negation) give the best
+     overall numbers, but <b>do not close the gap on hard slices</b>,
+     which motivates moving to context-aware models (CNN, BERT, LLMs).</li>
+ <li>Headline sentence for the talk: <i>"Our best model hits 88% accuracy,
+     but on mixed-sentiment reviews its F1 collapses from 88% to 77%.
+     That is exactly why accuracy alone is not enough."</i></li>
+</ul>
+
+<p style='color:#666;font-size:12px;margin-top:40px;'>
+Generated automatically by <code>sentiment_project.py</code>.
+All numbers come from a fresh run on the IMDb dataset.
+</p>
+</body></html>
